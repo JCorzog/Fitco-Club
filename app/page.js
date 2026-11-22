@@ -7,6 +7,7 @@ import { Search, MapPin, Star, Compass, BookOpen, Trophy, User } from 'lucide-re
 export default function Home() {
   const [studios, setStudios] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
   const [search, setSearch] = useState('');
   const [zone, setZone] = useState('Todas');
   const [passFilter, setPassFilter] = useState('Todos');
@@ -18,7 +19,8 @@ export default function Home() {
         .select('*')
         .order('avg_rating', { ascending: false });
 
-      if (!error && data) setStudios(data);
+      if (error) setErrorMsg(error.message);
+      if (data) setStudios(data);
       setLoading(false);
     }
     fetchStudios();
@@ -100,6 +102,11 @@ export default function Home() {
       </div>
 
       {/* Lista de Estudios */}
+              {errorMsg && (
+        <p className="text-center text-xs text-red-600 bg-red-50 p-3 rounded-xl mb-4">
+          Error Supabase: {errorMsg}
+        </p>
+      )}
       {loading ? (
         <p className="text-center text-sm text-navy/50 py-12">Cargando estudios...</p>
       ) : filtered.length === 0 ? (
