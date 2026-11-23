@@ -150,10 +150,10 @@ export default function PassportPage() {
             <Trophy className="w-5 h-5" />
             Top 4
           </Link>
-          <button className="flex flex-col items-center gap-1 opacity-50">
+          <Link href="/perfil" className="flex flex-col items-center gap-1">
             <User className="w-5 h-5" />
             Perfil
-          </button>
+          </Link>
         </div>
       </nav>
     </main>
