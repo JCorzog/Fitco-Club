@@ -180,7 +180,7 @@ export default function Home() {
                     <img
             src="/Logo.PNG"
             alt="Fitco Club"
-            className="w-11 h-11 object-contain shrink-0"
+            className="w-12 h-12 object-contain shrink-0 mix-blend-multiply brightness-105 contrast-110"
           />
           <div>
             <h1
