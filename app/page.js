@@ -178,7 +178,7 @@ export default function Home() {
         <div className="flex items-center gap-3">
           {/* Emblema / Logo */}
                     <img
-            src="/logo.png"
+            src="/Logo.png"
             alt="Fitco Club"
             className="w-11 h-11 object-contain shrink-0"
           />
