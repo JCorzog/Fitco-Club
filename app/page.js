@@ -552,22 +552,22 @@ export default function Home() {
         </div>
       )}
 
-      {/* Barra de Navegación Móvil */}
+            {/* Barra de Navegación Móvil */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-navy/10">
         <div className="max-w-md mx-auto flex justify-around py-3 text-[11px] font-medium text-navy/50">
-          <button className="flex flex-col items-center gap-1 text-navy">
+          <Link href="/" className="flex flex-col items-center gap-1 text-navy">
             <Compass className="w-5 h-5" />
             Explorar
-          </button>
-          <button className="flex flex-col items-center gap-1">
+          </Link>
+          <Link href="/passport" className="flex flex-col items-center gap-1">
             <BookOpen className="w-5 h-5" />
             Passport
-          </button>
-          <button className="flex flex-col items-center gap-1">
+          </Link>
+          <Link href="/top4" className="flex flex-col items-center gap-1">
             <Trophy className="w-5 h-5" />
             Top 4
-          </button>
-          <button className="flex flex-col items-center gap-1">
+          </Link>
+          <button className="flex flex-col items-center gap-1 opacity-50">
             <User className="w-5 h-5" />
             Perfil
           </button>
