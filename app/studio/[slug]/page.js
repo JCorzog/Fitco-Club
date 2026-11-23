@@ -18,6 +18,8 @@ import {
   CheckCircle2,
   XCircle,
   MessageSquare,
+  UserCheck,
+  Send,
 } from 'lucide-react';
 
 function getFallbackImage(name = '', disciplines = [], classes = []) {
@@ -45,21 +47,67 @@ function getFallbackImage(name = '', disciplines = [], classes = []) {
 export default function StudioDetail() {
   const { slug } = useParams();
   const [studio, setStudio] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchStudio() {
-      const { data } = await supabase
-        .from('studios')
-        .select('*')
-        .eq('slug', slug)
-        .single();
+  // Estado del formulario de reseña
+  const [showForm, setShowForm] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [authorName, setAuthorName] = useState('');
+  const [coachName, setCoachName] = useState('');
+  const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-      if (data) setStudio(data);
-      setLoading(false);
+  async function loadData() {
+    const { data: studioData } = await supabase
+      .from('studios')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+
+    if (studioData) {
+      setStudio(studioData);
+      const { data: reviewsData } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('studio_id', studioData.id)
+        .order('created_at', { ascending: false });
+
+      if (reviewsData) setReviews(reviewsData);
     }
-    if (slug) fetchStudio();
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    if (slug) loadData();
   }, [slug]);
+
+  async function handleSubmitReview(e) {
+    e.preventDefault();
+    if (!comment.trim() || !studio) return;
+
+    setSubmitting(true);
+    const { error } = await supabase.from('reviews').insert({
+      studio_id: studio.id,
+      rating,
+      author_name: authorName.trim() || 'Miembro Fitco',
+      coach_name: coachName.trim() || null,
+      comment: comment.trim(),
+    });
+
+    setSubmitting(false);
+
+    if (!error) {
+      setAuthorName('');
+      setCoachName('');
+      setComment('');
+      setRating(5);
+      setShowForm(false);
+      loadData(); // Recarga reseñas y el nuevo promedio
+    } else {
+      alert('No se pudo guardar la reseña: ' + error.message);
+    }
+  }
 
   if (loading) {
     return (
@@ -160,7 +208,6 @@ export default function StudioDetail() {
           </h2>
 
           <div className="space-y-3 text-xs">
-            {/* Wellhub */}
             <div className="p-3 rounded-xl bg-cream/70">
               <div className="flex items-center justify-between mb-1">
                 <span className="font-semibold text-navy">Wellhub</span>
@@ -179,7 +226,6 @@ export default function StudioDetail() {
               )}
             </div>
 
-            {/* TotalPass */}
             <div className="p-3 rounded-xl bg-cream/70">
               <div className="flex items-center justify-between mb-1">
                 <span className="font-semibold text-navy">TotalPass</span>
@@ -198,7 +244,6 @@ export default function StudioDetail() {
               )}
             </div>
 
-            {/* Fitpass */}
             <div className="p-3 rounded-xl bg-cream/70">
               <div className="flex items-center justify-between mb-1">
                 <span className="font-semibold text-navy">Fitpass</span>
@@ -219,7 +264,6 @@ export default function StudioDetail() {
             </div>
           </div>
 
-          {/* Ventana de reserva y cancelación */}
           <div className="mt-4 pt-3 border-t border-navy/10 space-y-2 text-xs text-navy/75">
             {studio.booking_window && (
               <p className="flex items-start gap-2">
@@ -273,7 +317,6 @@ export default function StudioDetail() {
             Logística y amenities
           </h2>
 
-          {/* Equipo */}
           <div className="flex items-start gap-2.5 text-xs text-navy/80 bg-cream/70 p-3 rounded-xl">
             <Dumbbell className="w-4 h-4 text-navy shrink-0 mt-0.5" />
             <div>
@@ -286,7 +329,6 @@ export default function StudioDetail() {
             </div>
           </div>
 
-          {/* Amenities */}
           {studio.amenities && studio.amenities.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {studio.amenities.map((a) => (
@@ -305,7 +347,6 @@ export default function StudioDetail() {
             </div>
           )}
 
-          {/* Sitio Web */}
           {studio.website_url && (
             <a
               href={studio.website_url}
@@ -318,23 +359,130 @@ export default function StudioDetail() {
           )}
         </section>
 
-        {/* Reseñas (siguiente paso) */}
+        {/* Reseñas y Coaches */}
         <section className="bg-white rounded-2xl p-4 border border-navy/5 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <h2
-              className="text-xl font-semibold text-navy"
-              style={{ fontFamily: 'var(--font-serif), serif' }}
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2
+                className="text-xl font-semibold text-navy leading-none"
+                style={{ fontFamily: 'var(--font-serif), serif' }}
+              >
+                Reseñas y coaches
+              </h2>
+              <p className="text-[11px] text-navy/50 mt-1">
+                {reviews.length} {reviews.length === 1 ? 'reseña' : 'reseñas'}
+              </p>
+            </div>
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="px-3.5 py-2 rounded-full bg-navy text-cream text-xs font-medium"
             >
-              Reseñas y coaches
-            </h2>
-            <span className="text-xs text-navy/50">{studio.review_count || 0} reseñas</span>
+              {showForm ? 'Cancelar' : '+ Escribir reseña'}
+            </button>
           </div>
-          <div className="text-center py-6 bg-cream/50 rounded-xl">
-            <MessageSquare className="w-6 h-6 text-navy/30 mx-auto mb-2" />
-            <p className="text-xs text-navy/60">
-              Aún no hay reseñas para este estudio.
-            </p>
-          </div>
+
+          {/* Formulario para nueva reseña */}
+          {showForm && (
+            <form
+              onSubmit={handleSubmitReview}
+              className="bg-cream/80 rounded-2xl p-4 mb-4 space-y-3 border border-navy/10"
+            >
+              <div>
+                <p className="text-[11px] font-semibold text-navy/70 mb-1.5">
+                  Calificación
+                </p>
+                <div className="flex gap-1.5">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      type="button"
+                      key={star}
+                      onClick={() => setRating(star)}
+                      className="p-1"
+                    >
+                      <Star
+                        className={`w-6 h-6 transition ${
+                          star <= rating
+                            ? 'fill-coral text-coral'
+                            : 'text-navy/20'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  placeholder="Tu nombre o apodo"
+                  value={authorName}
+                  onChange={(e) => setAuthorName(e.target.value)}
+                  className="px-3 py-2.5 rounded-xl bg-white border border-navy/10 text-xs focus:outline-none focus:border-navy"
+                />
+                <input
+                  type="text"
+                  placeholder="Coach (opcional)"
+                  value={coachName}
+                  onChange={(e) => setCoachName(e.target.value)}
+                  className="px-3 py-2.5 rounded-xl bg-white border border-navy/10 text-xs focus:outline-none focus:border-navy"
+                />
+              </div>
+
+              <textarea
+                rows={3}
+                required
+                placeholder="¿Qué tal la clase, la música, las instalaciones o el coach?"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl bg-white border border-navy/10 text-xs focus:outline-none focus:border-navy resize-none"
+              />
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-coral text-white text-xs font-semibold disabled:opacity-50"
+              >
+                <Send className="w-3.5 h-3.5" />
+                {submitting ? 'Publicando...' : 'Publicar reseña'}
+              </button>
+            </form>
+          )}
+
+          {/* Lista de reseñas */}
+          {reviews.length === 0 ? (
+            <div className="text-center py-6 bg-cream/50 rounded-xl">
+              <MessageSquare className="w-6 h-6 text-navy/30 mx-auto mb-2" />
+              <p className="text-xs text-navy/60">
+                Sé el primero en reseñar este estudio.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {reviews.map((rev) => (
+                <div
+                  key={rev.id}
+                  className="p-3.5 rounded-xl bg-cream/60 border border-navy/5 space-y-1.5"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-navy">
+                      {rev.author_name || 'Miembro Fitco'}
+                    </span>
+                    <span className="flex items-center gap-1 text-xs font-bold text-navy">
+                      <Star className="w-3 h-3 fill-coral text-coral" />
+                      {rev.rating}
+                    </span>
+                  </div>
+                  {rev.coach_name && (
+                    <p className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-navy/5 text-navy">
+                      <UserCheck className="w-3 h-3 text-coral" />
+                      Coach: {rev.coach_name}
+                    </p>
+                  )}
+                  <p className="text-xs text-navy/80 leading-relaxed">{rev.comment}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </main>
