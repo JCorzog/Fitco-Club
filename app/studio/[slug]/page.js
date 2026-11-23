@@ -20,6 +20,8 @@ import {
   MessageSquare,
   UserCheck,
   Send,
+  BookOpen,
+  Trophy,
 } from 'lucide-react';
 
 function getFallbackImage(name = '', disciplines = [], classes = []) {
@@ -50,6 +52,10 @@ export default function StudioDetail() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Estado de Passport y Top 4
+  const [inPassport, setInPassport] = useState(false);
+  const [inTop4, setInTop4] = useState(false);
+
   // Estado del formulario de reseña
   const [showForm, setShowForm] = useState(false);
   const [rating, setRating] = useState(5);
@@ -67,6 +73,12 @@ export default function StudioDetail() {
 
     if (studioData) {
       setStudio(studioData);
+
+      const savedPassport = JSON.parse(localStorage.getItem('fitco_passport') || '[]');
+      const savedTop4 = JSON.parse(localStorage.getItem('fitco_top4') || '[]');
+      setInPassport(savedPassport.includes(studioData.id));
+      setInTop4(savedTop4.includes(studioData.id));
+
       const { data: reviewsData } = await supabase
         .from('reviews')
         .select('*')
@@ -81,6 +93,34 @@ export default function StudioDetail() {
   useEffect(() => {
     if (slug) loadData();
   }, [slug]);
+
+  function togglePassport() {
+    if (!studio) return;
+    const saved = JSON.parse(localStorage.getItem('fitco_passport') || '[]');
+    const updated = saved.includes(studio.id)
+      ? saved.filter((id) => id !== studio.id)
+      : [...saved, studio.id];
+    localStorage.setItem('fitco_passport', JSON.stringify(updated));
+    setInPassport(!inPassport);
+  }
+
+  function toggleTop4() {
+    if (!studio) return;
+    const saved = JSON.parse(localStorage.getItem('fitco_top4') || '[]');
+    if (saved.includes(studio.id)) {
+      const updated = saved.filter((id) => id !== studio.id);
+      localStorage.setItem('fitco_top4', JSON.stringify(updated));
+      setInTop4(false);
+    } else {
+      if (saved.length >= 4) {
+        alert('Tu Top 4 ya está lleno. Quita un estudio en la pestaña Top 4 para agregar este.');
+        return;
+      }
+      const updated = [...saved, studio.id];
+      localStorage.setItem('fitco_top4', JSON.stringify(updated));
+      setInTop4(true);
+    }
+  }
 
   async function handleSubmitReview(e) {
     e.preventDefault();
@@ -103,7 +143,7 @@ export default function StudioDetail() {
       setComment('');
       setRating(5);
       setShowForm(false);
-      loadData(); // Recarga reseñas y el nuevo promedio
+      loadData();
     } else {
       alert('No se pudo guardar la reseña: ' + error.message);
     }
@@ -188,6 +228,33 @@ export default function StudioDetail() {
       </div>
 
       <div className="px-4 pt-5 space-y-5">
+        {/* Acciones Rápidas: Passport y Top 4 */}
+        <div className="grid grid-cols-2 gap-2.5">
+          <button
+            onClick={togglePassport}
+            className={`flex items-center justify-center gap-2 py-3 rounded-2xl text-xs font-semibold transition border ${
+              inPassport
+                ? 'bg-navy text-cream border-navy'
+                : 'bg-white text-navy border-navy/15 shadow-sm'
+            }`}
+          >
+            <BookOpen className="w-4 h-4" />
+            {inPassport ? 'En tu Passport ✓' : 'Sellar Passport'}
+          </button>
+
+          <button
+            onClick={toggleTop4}
+            className={`flex items-center justify-center gap-2 py-3 rounded-2xl text-xs font-semibold transition border ${
+              inTop4
+                ? 'bg-coral text-white border-coral'
+                : 'bg-white text-navy border-navy/15 shadow-sm'
+            }`}
+          >
+            <Trophy className="w-4 h-4" />
+            {inTop4 ? 'En tu Top 4 ★' : 'Agregar a Top 4'}
+          </button>
+        </div>
+
         {/* Vibe / Estilo */}
         {studio.style_vibe && (
           <div className="bg-white rounded-2xl p-4 border border-navy/5 shadow-sm">
