@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { supabase } from '../lib/supabase';
 import {
   Search,
@@ -337,9 +338,10 @@ export default function Home() {
       ) : (
         <div className="space-y-4">
           {filtered.map((studio) => (
-            <div
+            <Link
+              href={`/studio/${studio.slug}`}
               key={studio.id}
-              className="bg-white rounded-2xl overflow-hidden border border-navy/5 shadow-sm"
+              className="block bg-white rounded-2xl overflow-hidden border border-navy/5 shadow-sm hover:shadow-md transition"
             >
               {/* Foto / Portada del Estudio */}
               <div className="relative h-36 w-full bg-gradient-to-br from-navy via-navy/90 to-sky/80">
@@ -419,7 +421,7 @@ export default function Home() {
                   )}
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
