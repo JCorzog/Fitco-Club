@@ -43,7 +43,9 @@ const QUICK_AMENITIES = [
 ];
 
 function getFallbackImage(name = '', disciplines = [], classes = []) {
-  const text = [name, ...disciplines, ...classes].join(' ').toLowerCase();
+  const text = [name, ...(disciplines || []), ...(classes || [])]
+    .join(' ')
+    .toLowerCase();
   if (text.includes('pilates') || text.includes('barre')) {
     return 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80';
   }
@@ -249,7 +251,7 @@ export default function Home() {
         <select
           value={zone}
           onChange={(e) => setZone(e.target.value)}
-          className={`px-3 py-2 rounded-full text-xs font-medium outline-none cursor-pointer shrink-0 transition ${
+          className={`max-w-[115px] truncate px-3 py-2 rounded-full text-xs font-medium outline-none cursor-pointer shrink-0 transition ${
             zone !== 'Todas'
               ? 'bg-coral text-white'
               : 'bg-white text-navy border border-navy/15'
@@ -342,7 +344,10 @@ export default function Home() {
               {/* Foto / Portada del Estudio */}
               <div className="relative h-36 w-full bg-gradient-to-br from-navy via-navy/90 to-sky/80">
                 <img
-                  src={studio.image_url || getFallbackImage(studio.disciplines)}
+                  src={
+                    studio.image_url ||
+                    getFallbackImage(studio.name, studio.disciplines, studio.classes)
+                  }
                   alt={studio.name}
                   className="w-full h-full object-cover"
                 />
@@ -569,4 +574,3 @@ export default function Home() {
     </main>
   );
 }
-
