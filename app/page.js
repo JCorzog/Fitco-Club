@@ -177,14 +177,11 @@ export default function Home() {
       <header className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
           {/* Emblema / Logo */}
-          <div className="w-10 h-10 rounded-full bg-navy text-cream flex items-center justify-center shadow-sm shrink-0">
-            <span
-              className="text-lg font-semibold tracking-wider"
-              style={{ fontFamily: 'var(--font-serif), serif' }}
-            >
-              FC
-            </span>
-          </div>
+                    <img
+            src="/logo.png"
+            alt="Fitco Club"
+            className="w-11 h-11 object-contain shrink-0"
+          />
           <div>
             <h1
               className="text-3xl font-semibold tracking-tight text-navy leading-none"
