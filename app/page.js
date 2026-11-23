@@ -42,8 +42,8 @@ const QUICK_AMENITIES = [
   'Sala Infrarroja',
 ];
 
-function getFallbackImage(disciplines = []) {
-  const text = disciplines.join(' ').toLowerCase();
+function getFallbackImage(name = '', disciplines = [], classes = []) {
+  const text = [name, ...disciplines, ...classes].join(' ').toLowerCase();
   if (text.includes('pilates') || text.includes('barre')) {
     return 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80';
   }
