@@ -42,6 +42,26 @@ const QUICK_AMENITIES = [
   'Sala Infrarroja',
 ];
 
+function getFallbackImage(disciplines = []) {
+  const text = disciplines.join(' ').toLowerCase();
+  if (text.includes('pilates') || text.includes('barre')) {
+    return 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80';
+  }
+  if (text.includes('yoga')) {
+    return 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800&q=80';
+  }
+  if (text.includes('box')) {
+    return 'https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?auto=format&fit=crop&w=800&q=80';
+  }
+  if (text.includes('cycling') || text.includes('spin')) {
+    return 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80';
+  }
+  if (text.includes('hiit') || text.includes('fuerza') || text.includes('hyrox')) {
+    return 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=800&q=80';
+  }
+  return 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=800&q=80';
+}
+
 export default function Home() {
   const [studios, setStudios] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -76,7 +96,7 @@ export default function Home() {
 
   const handleAppChange = (val) => {
     setAppFilter(val);
-    setTierFilter('Todos'); // Resetea el nivel al cambiar de membresía
+    setTierFilter('Todos');
   };
 
   const toggleAmenity = (item) => {
@@ -177,7 +197,7 @@ export default function Home() {
       <header className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
           {/* Emblema / Logo */}
-                    <img
+          <img
             src="/Logo.PNG"
             alt="Fitco Club"
             className="w-12 h-12 object-contain shrink-0 mix-blend-multiply brightness-105 contrast-110"
@@ -321,19 +341,12 @@ export default function Home() {
             >
               {/* Foto / Portada del Estudio */}
               <div className="relative h-36 w-full bg-gradient-to-br from-navy via-navy/90 to-sky/80">
-                {studio.image_url ? (
-                  <img
-                    src={studio.image_url}
-                    alt={studio.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col justify-end p-4 bg-gradient-to-t from-navy/80 to-transparent">
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-cream/60">
-                      {(studio.disciplines && studio.disciplines[0]) || 'Boutique Studio'}
-                    </span>
-                  </div>
-                )}
+                <img
+                  src={studio.image_url || getFallbackImage(studio.disciplines)}
+                  alt={studio.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-navy/60 via-transparent to-transparent" />
 
                 {/* Rating flotante */}
                 <div className="absolute top-3 right-3 flex items-center gap-1 bg-cream/95 backdrop-blur px-2.5 py-1 rounded-full shadow-sm">
@@ -556,3 +569,4 @@ export default function Home() {
     </main>
   );
 }
+
