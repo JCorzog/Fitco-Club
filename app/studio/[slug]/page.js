@@ -22,6 +22,7 @@ import {
   Send,
   BookOpen,
   Trophy,
+  Mail,
 } from 'lucide-react';
 
 function getFallbackImage(name = '', disciplines = [], classes = []) {
@@ -44,6 +45,50 @@ function getFallbackImage(name = '', disciplines = [], classes = []) {
     return 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1000&q=80';
   }
   return 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=1000&q=80';
+}
+
+function getAutoLogoUrl(websiteUrl) {
+  if (!websiteUrl) return null;
+  try {
+    const url = new URL(
+      websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`
+    );
+    return `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=128`;
+  } catch {
+    return null;
+  }
+}
+
+function StudioLogo({ studio }) {
+  const [imgError, setImgError] = useState(false);
+  const logoSrc = studio.logo_url || getAutoLogoUrl(studio.website_url);
+
+  const initials = (studio.name || 'FC')
+    .trim()
+    .split(/\s+/)
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
+  if (!logoSrc || imgError) {
+    return (
+      <div className="w-12 h-12 rounded-2xl bg-navy text-cream border-2 border-white/90 shadow-md flex items-center justify-center text-sm font-bold tracking-wider shrink-0">
+        {initials}
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-12 h-12 rounded-2xl bg-white border-2 border-white shadow-md overflow-hidden flex items-center justify-center p-1.5 shrink-0">
+      <img
+        src={logoSrc}
+        alt={`Logo ${studio.name}`}
+        onError={() => setImgError(true)}
+        className="w-full h-full object-contain"
+      />
+    </div>
+  );
 }
 
 export default function StudioDetail() {
@@ -231,6 +276,12 @@ export default function StudioDetail() {
   const hasTotalPass = studio.totalpass_tier && studio.totalpass_tier !== 'No';
   const hasFitpass = Boolean(studio.fitpass_accepted);
 
+  const claimMailto = `mailto:hola@fitcoclub.com?subject=${encodeURIComponent(
+    `Reclamar perfil: ${studio.name}`
+  )}&body=${encodeURIComponent(
+    `Hola equipo de Fitco Club,\n\nSoy parte del equipo de ${studio.name} (${studio.zone}) y me gustaría reclamar nuestro perfil para actualizar el logo, fotos e información de membresías.\n\n¡Gracias!`
+  )}`;
+
   return (
     <main className="max-w-md mx-auto min-h-screen pb-16">
       {/* Portada Hero */}
@@ -243,7 +294,7 @@ export default function StudioDetail() {
           alt={studio.name}
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy/85 via-navy/25 to-navy/30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/30 to-navy/30" />
 
         {/* Botón Volver */}
         <Link
@@ -268,18 +319,21 @@ export default function StudioDetail() {
           </span>
         </div>
 
-        {/* Título sobre la portada */}
-        <div className="absolute bottom-4 left-4 right-4 text-cream">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-cream/75 flex items-center gap-1 mb-1">
-            <MapPin className="w-3 h-3" /> {studio.zone}
-            {studio.price_from ? ` · Desde $${studio.price_from} MXN` : ''}
-          </p>
-          <h1
-            className="text-3xl font-semibold leading-tight"
-            style={{ fontFamily: 'var(--font-serif), serif' }}
-          >
-            {studio.name}
-          </h1>
+        {/* Logo y Título sobre la portada */}
+        <div className="absolute bottom-4 left-4 right-4 flex items-end gap-3 text-cream">
+          <StudioLogo studio={studio} />
+          <div className="min-w-0">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-cream/80 flex items-center gap-1 mb-0.5 truncate">
+              <MapPin className="w-3 h-3 shrink-0" /> {studio.zone}
+              {studio.price_from ? ` · Desde $${studio.price_from} MXN` : ''}
+            </p>
+            <h1
+              className="text-2xl font-semibold leading-tight truncate"
+              style={{ fontFamily: 'var(--font-serif), serif' }}
+            >
+              {studio.name}
+            </h1>
+          </div>
         </div>
       </div>
 
@@ -606,6 +660,23 @@ export default function StudioDetail() {
               ))}
             </div>
           )}
+        </section>
+
+        {/* Reclamar Perfil (Para dueños de estudios) */}
+        <section className="bg-cream/80 rounded-2xl p-4 border border-navy/10 text-center space-y-2">
+          <p className="text-xs font-semibold text-navy">
+            ¿Eres dueño o parte del equipo de {studio.name}?
+          </p>
+          <p className="text-[11px] text-navy/65 leading-relaxed">
+            Reclama tu perfil para subir tu logo oficial, fotos del estudio y mantener tus reglas de membresía al día.
+          </p>
+          <a
+            href={claimMailto}
+            className="inline-flex items-center justify-center gap-1.5 mt-1 px-4 py-2 rounded-full bg-white border border-navy/15 text-navy text-xs font-semibold hover:bg-navy hover:text-cream transition shadow-xs"
+          >
+            <Mail className="w-3.5 h-3.5" />
+            Reclamar perfil
+          </a>
         </section>
       </div>
     </main>
