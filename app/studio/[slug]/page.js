@@ -51,6 +51,7 @@ export default function StudioDetail() {
   const [studio, setStudio] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(null);
 
   // Estado de Passport y Top 4
   const [inPassport, setInPassport] = useState(false);
@@ -74,8 +75,31 @@ export default function StudioDetail() {
     if (studioData) {
       setStudio(studioData);
 
-      const savedPassport = JSON.parse(localStorage.getItem('fitco_passport') || '[]');
-      const savedTop4 = JSON.parse(localStorage.getItem('fitco_top4') || '[]');
+      let savedPassport = JSON.parse(localStorage.getItem('fitco_passport') || '[]');
+      let savedTop4 = JSON.parse(localStorage.getItem('fitco_top4') || '[]');
+
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session?.user) {
+        setUserId(session.user.id);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('passport, top4')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile) {
+          if (Array.isArray(profile.passport)) {
+            savedPassport = Array.from(new Set([...profile.passport, ...savedPassport]));
+            localStorage.setItem('fitco_passport', JSON.stringify(savedPassport));
+          }
+          if (Array.isArray(profile.top4)) {
+            savedTop4 = Array.from(new Set([...profile.top4, ...savedTop4])).slice(0, 4);
+            localStorage.setItem('fitco_top4', JSON.stringify(savedTop4));
+          }
+        }
+      }
+
       setInPassport(savedPassport.includes(studioData.id));
       setInTop4(savedTop4.includes(studioData.id));
 
@@ -94,31 +118,48 @@ export default function StudioDetail() {
     if (slug) loadData();
   }, [slug]);
 
-  function togglePassport() {
+  async function togglePassport() {
     if (!studio) return;
     const saved = JSON.parse(localStorage.getItem('fitco_passport') || '[]');
     const updated = saved.includes(studio.id)
       ? saved.filter((id) => id !== studio.id)
       : [...saved, studio.id];
+
     localStorage.setItem('fitco_passport', JSON.stringify(updated));
     setInPassport(!inPassport);
+
+    if (userId) {
+      await supabase
+        .from('profiles')
+        .update({ passport: updated })
+        .eq('id', userId);
+    }
   }
 
-  function toggleTop4() {
+  async function toggleTop4() {
     if (!studio) return;
     const saved = JSON.parse(localStorage.getItem('fitco_top4') || '[]');
+    let updated;
+
     if (saved.includes(studio.id)) {
-      const updated = saved.filter((id) => id !== studio.id);
-      localStorage.setItem('fitco_top4', JSON.stringify(updated));
+      updated = saved.filter((id) => id !== studio.id);
       setInTop4(false);
     } else {
       if (saved.length >= 4) {
         alert('Tu Top 4 ya está lleno. Quita un estudio en la pestaña Top 4 para agregar este.');
         return;
       }
-      const updated = [...saved, studio.id];
-      localStorage.setItem('fitco_top4', JSON.stringify(updated));
+      updated = [...saved, studio.id];
       setInTop4(true);
+    }
+
+    localStorage.setItem('fitco_top4', JSON.stringify(updated));
+
+    if (userId) {
+      await supabase
+        .from('profiles')
+        .update({ top4: updated })
+        .eq('id', userId);
     }
   }
 
