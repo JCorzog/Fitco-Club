@@ -41,6 +41,7 @@ export default function PerfilPage() {
   const [authName, setAuthName] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
 
   // Estado del Perfil
   const [name, setName] = useState('');
@@ -87,6 +88,7 @@ export default function PerfilPage() {
   async function handleAuth(e) {
     e.preventDefault();
     setAuthError('');
+    setResetMessage('');
     setAuthLoading(true);
 
     if (isSignUp) {
@@ -114,6 +116,28 @@ export default function PerfilPage() {
       }
     }
     setAuthLoading(false);
+  }
+
+  async function handleForgotPassword() {
+    setAuthError('');
+    setResetMessage('');
+
+    if (!email.trim()) {
+      setAuthError('Escribe tu correo electrónico arriba para enviarte el enlace.');
+      return;
+    }
+
+    setAuthLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setAuthLoading(false);
+
+    if (error) {
+      setAuthError('No pudimos enviar el correo. Intenta de nuevo en unos minutos.');
+    } else {
+      setResetMessage('¡Listo! Revisa tu correo (o spam) para restablecer tu contraseña.');
+    }
   }
 
   async function handleSaveProfile(e) {
@@ -187,6 +211,7 @@ export default function PerfilPage() {
               onClick={() => {
                 setIsSignUp(false);
                 setAuthError('');
+                setResetMessage('');
               }}
               className={`flex-1 py-2 rounded-lg text-xs font-semibold transition ${
                 !isSignUp ? 'bg-navy text-cream shadow-sm' : 'text-navy/60'
@@ -199,6 +224,7 @@ export default function PerfilPage() {
               onClick={() => {
                 setIsSignUp(true);
                 setAuthError('');
+                setResetMessage('');
               }}
               className={`flex-1 py-2 rounded-lg text-xs font-semibold transition ${
                 isSignUp ? 'bg-navy text-cream shadow-sm' : 'text-navy/60'
@@ -246,8 +272,8 @@ export default function PerfilPage() {
               <input
                 type="password"
                 required
-                minLength={6}
-                placeholder="Mínimo 6 caracteres"
+                minLength={8}
+                placeholder="Mínimo 8 caracteres"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-cream/60 border border-navy/10 text-sm text-navy focus:outline-none focus:border-navy"
@@ -257,6 +283,12 @@ export default function PerfilPage() {
             {authError && (
               <p className="text-xs text-coral bg-coral/10 px-3 py-2 rounded-xl">
                 {authError}
+              </p>
+            )}
+
+            {resetMessage && (
+              <p className="text-xs text-green-700 bg-green-50 px-3 py-2 rounded-xl">
+                {resetMessage}
               </p>
             )}
 
@@ -271,6 +303,17 @@ export default function PerfilPage() {
                 ? 'Unirme a Fitco Club'
                 : 'Entrar'}
             </button>
+
+            {!isSignUp && (
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                disabled={authLoading}
+                className="w-full text-center text-xs font-medium text-navy/60 hover:text-navy transition pt-1"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            )}
           </form>
         </div>
       ) : (
