@@ -16,9 +16,37 @@ import {
 export default function PassportPage() {
   const [studios, setStudios] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(null);
 
   async function loadPassport() {
-    const saved = JSON.parse(localStorage.getItem('fitco_passport') || '[]');
+    setLoading(true);
+    let saved = JSON.parse(localStorage.getItem('fitco_passport') || '[]');
+
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (session?.user) {
+      setUserId(session.user.id);
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('passport')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profile && Array.isArray(profile.passport)) {
+        // Combina los sellos de la nube con los locales si había alguno pendiente
+        const merged = Array.from(new Set([...profile.passport, ...saved]));
+        saved = merged;
+        localStorage.setItem('fitco_passport', JSON.stringify(saved));
+
+        if (merged.length !== profile.passport.length) {
+          await supabase
+            .from('profiles')
+            .update({ passport: merged })
+            .eq('id', session.user.id);
+        }
+      }
+    }
+
     if (saved.length === 0) {
       setStudios([]);
       setLoading(false);
@@ -38,11 +66,19 @@ export default function PassportPage() {
     loadPassport();
   }, []);
 
-  function removeStamp(id) {
+  async function removeStamp(id) {
     const saved = JSON.parse(localStorage.getItem('fitco_passport') || '[]');
     const updated = saved.filter((item) => item !== id);
+
     localStorage.setItem('fitco_passport', JSON.stringify(updated));
     setStudios((prev) => prev.filter((s) => s.id !== id));
+
+    if (userId) {
+      await supabase
+        .from('profiles')
+        .update({ passport: updated })
+        .eq('id', userId);
+    }
   }
 
   const progress = Math.min(100, Math.round((studios.length / 208) * 100));
