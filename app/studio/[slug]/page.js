@@ -126,6 +126,21 @@ export default function StudioDetail() {
     e.preventDefault();
     if (!comment.trim() || !studio) return;
 
+    const BAD_WORDS = [
+      'puto', 'puta', 'pendejo', 'pendeja', 'verga', 'chingar', 'chingada',
+      'cabron', 'cabrón', 'culero', 'culera', 'mierda', 'estupido', 'estúpido',
+      'idiota', 'imbecil', 'imbécil', 'mamada', 'jodido', 'jodida', 'ojete',
+      'zorra', 'perra', 'maricon', 'maricón', 'pinche'
+    ];
+    const fullText = `${authorName} ${coachName} ${comment}`.toLowerCase();
+    const hasBadWord = BAD_WORDS.some((word) =>
+      new RegExp(`\\b${word}\\b`, 'i').test(fullText)
+    );
+    if (hasBadWord) {
+      alert('Por favor evita usar lenguaje ofensivo en tu reseña.');
+      return;
+    }
+
     setSubmitting(true);
     const { error } = await supabase.from('reviews').insert({
       studio_id: studio.id,
