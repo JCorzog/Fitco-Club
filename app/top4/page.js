@@ -38,9 +38,37 @@ function getFallbackImage(name = '', disciplines = [], classes = []) {
 export default function Top4Page() {
   const [studios, setStudios] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(null);
 
   async function loadTop4() {
-    const saved = JSON.parse(localStorage.getItem('fitco_top4') || '[]');
+    setLoading(true);
+    let saved = JSON.parse(localStorage.getItem('fitco_top4') || '[]');
+
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (session?.user) {
+      setUserId(session.user.id);
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('top4')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profile && Array.isArray(profile.top4)) {
+        // Combina nube y local sin duplicados y respetando máximo 4 lugares
+        const merged = Array.from(new Set([...profile.top4, ...saved])).slice(0, 4);
+        saved = merged;
+        localStorage.setItem('fitco_top4', JSON.stringify(saved));
+
+        if (JSON.stringify(merged) !== JSON.stringify(profile.top4)) {
+          await supabase
+            .from('profiles')
+            .update({ top4: merged })
+            .eq('id', session.user.id);
+        }
+      }
+    }
+
     if (saved.length === 0) {
       setStudios([]);
       setLoading(false);
@@ -66,11 +94,19 @@ export default function Top4Page() {
     loadTop4();
   }, []);
 
-  function removeFromTop4(id) {
+  async function removeFromTop4(id) {
     const saved = JSON.parse(localStorage.getItem('fitco_top4') || '[]');
     const updated = saved.filter((item) => item !== id);
+
     localStorage.setItem('fitco_top4', JSON.stringify(updated));
     setStudios((prev) => prev.filter((s) => s.id !== id));
+
+    if (userId) {
+      await supabase
+        .from('profiles')
+        .update({ top4: updated })
+        .eq('id', userId);
+    }
   }
 
   const slots = [0, 1, 2, 3];
