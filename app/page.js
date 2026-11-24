@@ -65,6 +65,50 @@ function getFallbackImage(name = '', disciplines = [], classes = []) {
   return 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=800&q=80';
 }
 
+function getAutoLogoUrl(websiteUrl) {
+  if (!websiteUrl) return null;
+  try {
+    const url = new URL(
+      websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`
+    );
+    return `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=128`;
+  } catch {
+    return null;
+  }
+}
+
+function StudioLogo({ studio }) {
+  const [imgError, setImgError] = useState(false);
+  const logoSrc = studio.logo_url || getAutoLogoUrl(studio.website_url);
+
+  const initials = (studio.name || 'FC')
+    .trim()
+    .split(/\s+/)
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
+  if (!logoSrc || imgError) {
+    return (
+      <div className="w-11 h-11 rounded-xl bg-navy text-cream border-2 border-white shadow-md flex items-center justify-center text-xs font-bold tracking-wider shrink-0">
+        {initials}
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-11 h-11 rounded-xl bg-white border-2 border-white shadow-md overflow-hidden flex items-center justify-center p-1 shrink-0">
+      <img
+        src={logoSrc}
+        alt={`Logo ${studio.name}`}
+        onError={() => setImgError(true)}
+        className="w-full h-full object-contain"
+      />
+    </div>
+  );
+}
+
 export default function Home() {
   const [studios, setStudios] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -195,7 +239,7 @@ export default function Home() {
   const availableTiers = TIERS_BY_APP[appFilter] || [];
 
   return (
-    <main className="max-w-md mx-auto min-h-screen px-4 pt-6">
+    <main className="max-w-md mx-auto min-h-screen px-4 pt-6 pb-24">
       {/* Header Editorial */}
       <header className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
@@ -353,7 +397,7 @@ export default function Home() {
                   alt={studio.name}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-navy/60 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-navy/65 via-transparent to-transparent" />
 
                 {/* Rating flotante */}
                 <div className="absolute top-3 right-3 flex items-center gap-1 bg-cream/95 backdrop-blur px-2.5 py-1 rounded-full shadow-sm">
@@ -370,6 +414,11 @@ export default function Home() {
                     {studio.intensity_level}/5
                   </div>
                 )}
+
+                {/* Logo del Estudio en esquina inferior izquierda */}
+                <div className="absolute bottom-3 left-3">
+                  <StudioLogo studio={studio} />
+                </div>
               </div>
 
               {/* Contenido de la Tarjeta */}
@@ -552,7 +601,7 @@ export default function Home() {
         </div>
       )}
 
-            {/* Barra de Navegación Móvil */}
+      {/* Barra de Navegación Móvil */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-navy/10">
         <div className="max-w-md mx-auto flex justify-around py-3 text-[11px] font-medium text-navy/50">
           <Link href="/" className="flex flex-col items-center gap-1 text-navy">
