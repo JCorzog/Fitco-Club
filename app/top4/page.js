@@ -85,8 +85,8 @@ function drawNotchedRect(ctx, x, y, w, h, r) {
 function fitText(ctx, text, maxWidth, initialSize, fontTemplate) {
   let size = initialSize;
   ctx.font = fontTemplate.replace('{size}', size);
-  while (ctx.measureText(text).width > maxWidth && size > 24) {
-    size -= 2;
+  while (ctx.measureText(text).width > maxWidth && size > 15) {
+    size -= 1;
     ctx.font = fontTemplate.replace('{size}', size);
   }
   return size;
@@ -190,7 +190,7 @@ async function generateTop4StoryBlob(studios) {
     ctx.fillText(`0${i + 1}`, boxX + 55, centerY + 4);
 
     const textX = boxX + 215;
-    const maxTextW = boxW - 260;
+    const maxTextW = boxW - 275;
 
     if (studio) {
       const nameUpper = (studio.name || '').toUpperCase();
